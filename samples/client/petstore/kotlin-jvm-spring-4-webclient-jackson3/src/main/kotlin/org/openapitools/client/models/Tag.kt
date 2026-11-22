@@ -28,27 +28,22 @@ import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
- * Describes the result of uploading an image resource
+ * A tag for a pet
  *
- * @param code
- * @param type
- * @param message
+ * @param id
+ * @param name
  */
 
 
-data class ModelApiResponse (
+data class Tag (
 
-    @param:JsonProperty("code")
-    @get:JsonProperty("code")
-    val code: kotlin.Int? = null,
+    @param:JsonProperty("id")
+    @get:JsonProperty("id")
+    val id: kotlin.Long? = null,
 
-    @param:JsonProperty("type")
-    @get:JsonProperty("type")
-    val type: kotlin.String? = null,
-
-    @param:JsonProperty("message")
-    @get:JsonProperty("message")
-    val message: kotlin.String? = null
+    @param:JsonProperty("name")
+    @get:JsonProperty("name")
+    val name: kotlin.String? = null
 
 ) {
 

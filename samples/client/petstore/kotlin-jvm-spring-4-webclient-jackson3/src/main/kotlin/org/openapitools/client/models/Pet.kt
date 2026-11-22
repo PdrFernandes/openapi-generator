@@ -23,61 +23,64 @@
 
 package org.openapitools.client.models
 
+import org.openapitools.client.models.Category
+import org.openapitools.client.models.Tag
 
 import com.fasterxml.jackson.annotation.JsonEnumDefaultValue
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.annotation.JsonValue
 
 /**
- * An order for a pets from the pet store
+ * A pet for sale in the pet store
  *
+ * @param name
+ * @param photoUrls
  * @param id
- * @param petId
- * @param quantity
- * @param shipDate
- * @param status Order Status
- * @param complete
+ * @param category
+ * @param tags
+ * @param status pet status in the store
  */
 
 
-data class Order (
+data class Pet (
+
+    @param:JsonProperty("name")
+    @get:JsonProperty("name")
+    val name: kotlin.String,
+
+    @param:JsonProperty("photoUrls")
+    @get:JsonProperty("photoUrls")
+    val photoUrls: kotlin.collections.List<kotlin.String>,
 
     @param:JsonProperty("id")
     @get:JsonProperty("id")
     val id: kotlin.Long? = null,
 
-    @param:JsonProperty("petId")
-    @get:JsonProperty("petId")
-    val petId: kotlin.Long? = null,
+    @param:JsonProperty("category")
+    @get:JsonProperty("category")
+    val category: Category? = null,
 
-    @param:JsonProperty("quantity")
-    @get:JsonProperty("quantity")
-    val quantity: kotlin.Int? = null,
+    @param:JsonProperty("tags")
+    @get:JsonProperty("tags")
+    val tags: kotlin.collections.List<Tag>? = null,
 
-    @param:JsonProperty("shipDate")
-    @get:JsonProperty("shipDate")
-    val shipDate: java.time.OffsetDateTime? = null,
-
-    /* Order Status */
+    /* pet status in the store */
     @param:JsonProperty("status")
     @get:JsonProperty("status")
-    val status: Order.Status? = null,
-
-    @param:JsonProperty("complete")
-    @get:JsonProperty("complete")
-    val complete: kotlin.Boolean? = false
+    @Deprecated(message = "This property is deprecated.")
+    val status: Pet.Status? = null
 
 ) {
 
     /**
-     * Order Status
+     * pet status in the store
      *
-     * Values: placed,approved,delivered,unknown_default_open_api
+     * Values: available,pending,sold,unknown_default_open_api
      */
     enum class Status(@get:JsonValue val value: kotlin.String) {
-        @JsonProperty(value = "placed") placed("placed"),
-        @JsonProperty(value = "approved") approved("approved"),
-        @JsonProperty(value = "delivered") delivered("delivered"),
+        @JsonProperty(value = "available") available("available"),
+        @JsonProperty(value = "pending") pending("pending"),
+        @JsonProperty(value = "sold") sold("sold"),
         @JsonProperty(value = "unknown_default_open_api") @JsonEnumDefaultValue unknown_default_open_api("unknown_default_open_api");
     }
 

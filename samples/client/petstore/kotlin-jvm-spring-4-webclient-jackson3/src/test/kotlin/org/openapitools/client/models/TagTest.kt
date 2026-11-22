@@ -26,29 +26,23 @@ package org.openapitools.client.models
 import io.kotlintest.shouldBe
 import io.kotlintest.specs.ShouldSpec
 
-import org.openapitools.client.models.ModelApiResponse
+import org.openapitools.client.models.Tag
 
-class ModelApiResponseTest : ShouldSpec() {
+class TagTest : ShouldSpec() {
     init {
-        // uncomment below to create an instance of ModelApiResponse
-        //val modelInstance = ModelApiResponse()
+        // uncomment below to create an instance of Tag
+        //val modelInstance = Tag()
 
-        // to test the property `code`
-        should("test code") {
+        // to test the property `id`
+        should("test id") {
             // uncomment below to test the property
-            //modelInstance.code shouldBe ("TODO")
+            //modelInstance.id shouldBe ("TODO")
         }
 
-        // to test the property `type`
-        should("test type") {
+        // to test the property `name`
+        should("test name") {
             // uncomment below to test the property
-            //modelInstance.type shouldBe ("TODO")
-        }
-
-        // to test the property `message`
-        should("test message") {
-            // uncomment below to test the property
-            //modelInstance.message shouldBe ("TODO")
+            //modelInstance.name shouldBe ("TODO")
         }
 
     }
