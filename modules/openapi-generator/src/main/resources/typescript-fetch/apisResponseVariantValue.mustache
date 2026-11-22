@@ -12,7 +12,12 @@
             return new runtime.JSONApiResponse<any>(response) as any;
 {{/isMap}}
 {{#isArray}}
+{{#uniqueItems}}
+            return new runtime.JSONApiResponse(response, (jsonValue) => new Set(jsonValue)) as any;
+{{/uniqueItems}}
+{{^uniqueItems}}
             return new runtime.JSONApiResponse<any>(response) as any;
+{{/uniqueItems}}
 {{/isArray}}
 {{#returnSimpleType}}
             if (this.isJsonMime(responseContentType)) {
@@ -24,7 +29,7 @@
 {{/returnTypeIsPrimitive}}
 {{^returnTypeIsPrimitive}}
 {{#isArray}}
-            return new runtime.JSONApiResponse(response{{^withoutRuntimeChecks}}, (jsonValue) => {{#uniqueItems}}new Set({{/uniqueItems}}jsonValue.map({{returnBaseType}}FromJSON){{/withoutRuntimeChecks}}){{#uniqueItems}}){{/uniqueItems}} as any;
+            return new runtime.JSONApiResponse(response{{^withoutRuntimeChecks}}, (jsonValue) => {{#uniqueItems}}new Set({{/uniqueItems}}jsonValue.map({{returnBaseType}}FromJSON){{#uniqueItems}}){{/uniqueItems}}{{/withoutRuntimeChecks}}{{#withoutRuntimeChecks}}{{#uniqueItems}}, (jsonValue) => new Set(jsonValue){{/uniqueItems}}{{/withoutRuntimeChecks}}) as any;
 {{/isArray}}
 {{^isArray}}
 {{#isMap}}

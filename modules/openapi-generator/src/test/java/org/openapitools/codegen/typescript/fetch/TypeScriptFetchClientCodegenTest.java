@@ -1589,6 +1589,92 @@ public class TypeScriptFetchClientCodegenTest {
 
     private static final String DATE_HANDLING_SPEC = "src/test/resources/3_0/typescript-fetch/date-handling.yaml";
 
+    private static final String UNIQUE_ITEMS_RESPONSE_SPEC = "src/test/resources/3_0/typescript-fetch/unique-items-response.yaml";
+
+    @Test(description = "Issue #24888: unique-item array of primitives in a response body must be wrapped into a Set")
+    public void testUniquePrimitiveArrayResponseIsWrappedIntoSet() throws IOException {
+        File output = generate(Collections.emptyMap(), UNIQUE_ITEMS_RESPONSE_SPEC);
+        Path api = output.toPath().resolve("apis/DefaultApi.ts");
+
+        // the spec from the issue: the 200 response is a $ref to components.responses
+        String content = Files.readString(api);
+        int start = content.indexOf("async uniquePrimitiveResponseBodyRaw(");
+        assertThat(start).as("uniquePrimitiveResponseBodyRaw is generated").isNotNegative();
+        String primitiveRaw = content.substring(start, content.indexOf("\n    }", start));
+        assertThat(primitiveRaw)
+                .contains("Promise<runtime.ApiResponse<Set<string>>>")
+                .contains("return new runtime.JSONApiResponse(response, (jsonValue) => new Set(jsonValue));");
+
+        TestUtils.assertFileContains(api,
+                "return new runtime.JSONApiResponse(response, (jsonValue) => new Set(jsonValue.map(ItemFromJSON)));");
+        TestUtils.assertFileNotContains(api, "return new runtime.JSONApiResponse<any>(response);");
+    }
+
+    @Test(description = "Issue #24888: unique-item array responses must be wrapped into a Set without runtime checks too")
+    public void testUniqueArrayResponseIsWrappedIntoSetWithoutRuntimeChecks() throws IOException {
+        File output = generate(Map.of("withoutRuntimeChecks", true), UNIQUE_ITEMS_RESPONSE_SPEC);
+        Path api = output.toPath().resolve("apis/DefaultApi.ts");
+
+        TestUtils.assertFileContains(api,
+                "Promise<runtime.ApiResponse<Set<string>>>",
+                "Promise<runtime.ApiResponse<Set<Item>>>");
+        String content = Files.readString(api);
+        // without runtime checks the model branch used to emit `JSONApiResponse(response));`, which does not compile
+        assertThat(content)
+                .doesNotContain("JSONApiResponse(response))")
+                .doesNotContain("return new runtime.JSONApiResponse<any>(response);");
+        // one per operation: the primitive array, the model array and the (unsplit) per-content-type one
+        assertThat(StringUtils.countMatches(content,
+                "return new runtime.JSONApiResponse(response, (jsonValue) => new Set(jsonValue));")).isEqualTo(3);
+    }
+
+    @Test(description = "Issue #24888: unique-item array responses must be wrapped into a Set in merged content-type variants")
+    public void testUniqueArrayResponseVariantsAreWrappedIntoSet() throws IOException {
+        File output = generateSplitByContentType(Collections.emptyMap(), UNIQUE_ITEMS_RESPONSE_SPEC);
+        Path api = output.toPath().resolve("apis/DefaultApi.ts");
+
+        // application/json and application/xml declare different schemas, so the operation goes through
+        // apisResponseVariantValue.mustache, one branch per content-type
+        TestUtils.assertFileContains(api,
+                "UniqueResponseVariantsRequest & { accept?: 'application/json' }, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Set<string>>>;",
+                "UniqueResponseVariantsRequest & { accept: 'application/xml' }, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Set<Item>>>;",
+                "return new runtime.JSONApiResponse(response, (jsonValue) => new Set(jsonValue)) as any;",
+                "return new runtime.JSONApiResponse(response, (jsonValue) => new Set(jsonValue.map(ItemFromJSON))) as any;");
+        TestUtils.assertFileNotContains(api, "return new runtime.JSONApiResponse<any>(response) as any;");
+    }
+
+    @Test(description = "Issue #24888: merged content-type variants must be wrapped into a Set without runtime checks too")
+    public void testUniqueArrayResponseVariantsAreWrappedIntoSetWithoutRuntimeChecks() throws IOException {
+        File output = generateSplitByContentType(Map.of("withoutRuntimeChecks", true), UNIQUE_ITEMS_RESPONSE_SPEC);
+        Path api = output.toPath().resolve("apis/DefaultApi.ts");
+
+        TestUtils.assertFileContains(api,
+                "UniqueResponseVariantsRequest & { accept?: 'application/json' }, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Set<string>>>;",
+                "UniqueResponseVariantsRequest & { accept: 'application/xml' }, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Set<Item>>>;");
+        String content = Files.readString(api);
+        assertThat(content)
+                .doesNotContain("JSONApiResponse(response)) as any;")
+                .doesNotContain("return new runtime.JSONApiResponse<any>(response) as any;");
+        // one per content-type variant
+        assertThat(StringUtils.countMatches(content,
+                "return new runtime.JSONApiResponse(response, (jsonValue) => new Set(jsonValue)) as any;")).isEqualTo(2);
+    }
+
+    private static File generateSplitByContentType(Map<String, Object> properties, String inputSpec) throws IOException {
+        File output = Files.createTempDirectory("test").toFile();
+        output.deleteOnExit();
+
+        final CodegenConfigurator configurator = new CodegenConfigurator()
+                .setGeneratorName("typescript-fetch")
+                .setInputSpec(inputSpec)
+                .setAdditionalProperties(properties)
+                .addGlobalProperty(CodegenConstants.SPLIT_OPERATIONS_BY_CONTENT_TYPE, "true")
+                .setOutputDir(output.getAbsolutePath().replace("\\", "/"));
+
+        new DefaultGenerator().opts(configurator.toClientOptInput()).generate().forEach(File::deleteOnExit);
+        return output;
+    }
+
     private static File generate(
         Map<String, Object> properties,
         String inputSpec

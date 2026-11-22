@@ -473,7 +473,12 @@ export class {{classname}} extends runtime.BaseAPI {
         return new runtime.JSONApiResponse<any>(response);
         {{/isMap}}
         {{#isArray}}
+        {{#uniqueItems}}
+        return new runtime.JSONApiResponse(response, (jsonValue) => new Set(jsonValue));
+        {{/uniqueItems}}
+        {{^uniqueItems}}
         return new runtime.JSONApiResponse<any>(response);
+        {{/uniqueItems}}
         {{/isArray}}
         {{#returnSimpleType}}
         if (this.isJsonMime(response.headers.get('content-type'))) {
@@ -485,7 +490,7 @@ export class {{classname}} extends runtime.BaseAPI {
         {{/returnTypeIsPrimitive}}
         {{^returnTypeIsPrimitive}}
         {{#isArray}}
-        return new runtime.JSONApiResponse(response{{^withoutRuntimeChecks}}, (jsonValue) => {{#uniqueItems}}new Set({{/uniqueItems}}jsonValue.map({{returnBaseType}}FromJSON){{/withoutRuntimeChecks}}){{#uniqueItems}}){{/uniqueItems}};
+        return new runtime.JSONApiResponse(response{{^withoutRuntimeChecks}}, (jsonValue) => {{#uniqueItems}}new Set({{/uniqueItems}}jsonValue.map({{returnBaseType}}FromJSON){{#uniqueItems}}){{/uniqueItems}}{{/withoutRuntimeChecks}}{{#withoutRuntimeChecks}}{{#uniqueItems}}, (jsonValue) => new Set(jsonValue){{/uniqueItems}}{{/withoutRuntimeChecks}});
         {{/isArray}}
         {{^isArray}}
         {{#isMap}}

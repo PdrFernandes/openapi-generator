@@ -1,0 +1,66 @@
+openapi: 3.0.0
+info:
+  title: uniqueItems test spec
+  version: 1.0.0
+  description: >-
+    Arrays with uniqueItems returned in response bodies (issue #24888).
+    `/unique-primitive-response-body` is the spec from the issue, response $ref included.
+    `/unique-response-variants` declares different schemas per content-type, so that with the
+    global property splitOperationsByContentType=true it goes through the merged content-type variants.
+paths:
+  /unique-primitive-response-body:
+    get:
+      operationId: uniquePrimitiveResponseBody
+      responses:
+        '200':
+          $ref: '#/components/responses/UniquePrimitiveArrayResponse'
+  /unique-model-response-body:
+    get:
+      operationId: uniqueModelResponseBody
+      responses:
+        '200':
+          description: Response body that is a model array with uniqueItems
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UniqueItemArray'
+  /unique-response-variants:
+    get:
+      operationId: uniqueResponseVariants
+      responses:
+        '200':
+          description: A different uniqueItems array per content-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UniqueStringArray'
+            application/xml:
+              schema:
+                $ref: '#/components/schemas/UniqueItemArray'
+components:
+  schemas:
+    UniqueStringArray:
+      type: array
+      uniqueItems: true
+      items:
+        type: string
+    UniqueItemArray:
+      type: array
+      uniqueItems: true
+      items:
+        $ref: '#/components/schemas/Item'
+    Item:
+      type: object
+      properties:
+        name:
+          type: string
+  responses:
+    UniquePrimitiveArrayResponse:
+      description: Response body that is a primitive array with uniqueItems
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/UniqueStringArray'
+        application/xml:
+          schema:
+            $ref: '#/components/schemas/UniqueStringArray'
